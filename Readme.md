@@ -1,1 +1,1 @@
-## Natural Language Processing-Sentimental Analysis
+## Natural Language Processing-Sentiment Analysis
