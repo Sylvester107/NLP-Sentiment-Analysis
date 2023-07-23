@@ -5,86 +5,72 @@ from transformers import AutoModelForSequenceClassification,AutoTokenizer, AutoC
 import numpy as np
 #convert logits to probabilities
 from scipy.special import softmax
+from transformers import pipeline
 
 
-
-
-#import the model
-tokenizer = AutoTokenizer.from_pretrained('bert-base-cased')
-
-model_path = f"Junr-syl/tweet_sentiments_analysis"
-config = AutoConfig.from_pretrained(model_path)
-model = AutoModelForSequenceClassification.from_pretrained(model_path)
 #Set the page configs
-st.set_page_config(page_title='Sentiments Analysis',page_icon='😎',layout='wide')
+st.set_page_config(page_title='Sentiments Analysis',page_icon='😎',layout='centered')
 
 #welcome Animation
 com.iframe("https://embed.lottiefiles.com/animation/149093")
-st.markdown('<h1> Tweet Sentiments </h1>',unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center'> Covid Vaccine Tweet Sentiments </h1>",unsafe_allow_html=True)
+st.write("<h2 style='font-size: 24px;'> These models were trained to detect how a user feel about the covid vaccines based on their tweets(text) </h2>",unsafe_allow_html=True)
 
 #Create a form to take user inputs
 with st.form(key='tweet',clear_on_submit=True):
+    #input text
     text=st.text_area('Copy and paste a tweet or type one',placeholder='I find it quite amusing how people ignore the effects of not taking the vaccine')
-    submit=st.form_submit_button('submit')
+    #Set examples
+    alt_text=st.selectbox("Can't Type?  Select an Example below",('I hate the vaccines','Vaccines made from dead human tissues','Take the vaccines or regret the consequences','Covid is a Hoax','Making the vaccines is a huge step forward for humanity. Just take them'))
+    #Select a model
+    models={'Roberta': 'Junr-syl/sentiments_analysis_Roberta',
+        'Bert':    'Junr-syl/sentiments_analysis_upgrade',
+        'Distilbert':'Junr-syl/sentiments_analysis_DISTILBERT'}
+    model=st.selectbox('Which model would you want to Use? Distilbert is Recommended',('Distilbert','Bert','Roberta'))
+     #Submit
+    submit=st.form_submit_button('Predict','Continue processing input')
+    
+selected_model=models[model]
 
 #create columns to show outputs
 col1,col2,col3=st.columns(3)
-col1.title('Sentiment Emoji')
-col2.title('How this user feels about the vaccine')
-col3.title('Confidence of this prediction')
+col1.write('<h2 style="font-size: 24px;"> Sentiment Emoji </h2>',unsafe_allow_html=True)
+col2.write('<h2 style="font-size: 24px;"> How this user feels about the vaccine </h2>',unsafe_allow_html=True)
+col3.write('<h2 style="font-size: 24px;"> Confidence of this prediction </h2>',unsafe_allow_html=True)
 
 if submit:
-    print('submitted')
-    #pass text to preprocessor
-    def preprocess(text):
-    #initiate an empty list 
-        new_text = []
-        #split text by space
-        for t in text.split(" "):
-            #set username to @user
-            t = '@user' if t.startswith('@') and len(t) > 1 else t  
-            #set tweet source to http
-            t = 'http' if t.startswith('http') else t 
-            #store text in the list
-            new_text.append(t)
-            #change text from list back to string
-        return " ".join(new_text) 
+    #Check text
+    if text=="":
+        text=alt_text
+        st.success(f"input text is set to '{text}'")    
+    else:
+        st.success('Text received',icon='✅')
+        
+    #import the model
+    pipe=pipeline(model=selected_model)
     
-
+    
     #pass text to model
-
-    #change label id 
-    config.id2label = {0: 'NEGATIVE', 1: 'NEUTRAL', 2: 'POSITIVE'}
-
-    text = preprocess(text)
-
-    # PyTorch-based models
-    encoded_input = tokenizer(text, return_tensors='pt')
-    output = model(**encoded_input)
-    scores = output[0][0].detach().numpy()
-    scores = softmax(scores)
-
-    #Process scores
-    ranking = np.argsort(scores)
-    ranking = ranking[::-1]  
-    l = config.id2label[ranking[0]]
-    s = scores[ranking[0]]
-
-    #output
-    if l=='NEGATIVE':
+    output=pipe(text)
+    output_dict=output[0]
+    lable=output_dict['label']
+    score=output_dict['score']
+    
+        #output
+    if lable=='NEGATIVE' or lable=='LABEL_0':
         with col1:
             com.iframe("https://embed.lottiefiles.com/animation/125694")
-        col2.write('Negative')
-        col3.write(f'{s}%')
-    elif l=='POSITIVE':
+        col2.write('NEGATIVE')
+        col3.write(f'{score*100:.2f}%')
+    elif lable=='POSITIVE'or lable=='LABEL_2':
         with col1:
             com.iframe("https://embed.lottiefiles.com/animation/148485")
-        col2.write('Positive')
-        col3.write(f'{s}%')
+        col2.write('POSITIVE')
+        col3.write(f'{score*100:.2f}%')
     else:
         with col1:
             com.iframe("https://embed.lottiefiles.com/animation/136052")
-        col2.write('Neutral')
-        col3.write(f'{s}%')
+        col2.write('NEUTRAL')
+        col3.write(f'{score*100:.2f}%')
 
 
