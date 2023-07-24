@@ -5,7 +5,7 @@
 
 | Project Name | Deployed App | Article |
 |--------------|--------------|---------|
-|NLP Sentiments analysis|[Application](https://huggingface.co/spaces/Junr-syl/Junr-syl-tweet_sentiments_analysis)|[meduim Article]()
+|NLP Sentiments analysis|[Application](https://huggingface.co/spaces/Junr-syl/Junr-syl-tweet_sentiments_analysis)|[meduim Article](https://medium.com/@sylvesterjnr87/unveiling-emotions-harnessing-natural-language-processing-for-sentiment-analysis-1e4b131b66a6)
 |              |              |         |
 
 📚 **Description**
